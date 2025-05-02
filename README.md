@@ -63,6 +63,7 @@ npx -y @smithery/cli install @djbriane/plex-mcp --client claude
 3. Configure environment variables for your Plex server:
    - `PLEX_TOKEN`: Your Plex authentication token
    - `PLEX_SERVER_URL`: Your Plex server URL (e.g., http://192.168.1.100:32400)
+   - `PLEX_VERIFY_SSL`: (Optional) Set to "False" to disable SSL certificate verification if you encounter certificate errors (defaults to "True")
 
 ### Finding Your Plex Token
 
@@ -92,7 +93,8 @@ Add the following configuration to your Claude app:
             ],
             "env": {
                 "PLEX_TOKEN": "YOUR_PLEX_TOKEN",
-                "PLEX_SERVER_URL": "YOUR_PLEX_SERVER_URL"
+                "PLEX_SERVER_URL": "YOUR_PLEX_SERVER_URL",
+                "PLEX_VERIFY_SSL": "True"  /* Set to "False" if you encounter SSL certificate errors */
             }
         }
     }
@@ -142,7 +144,13 @@ Integration tests are marked with the integration marker. To run only the integr
 uv run pytest -m integration
 ```
 
-If you are experiencing connection issues to your Plex server try running the integration tests to help troubleshoot.
+If you are experiencing connection issues to your Plex server:
+
+1. Try setting `PLEX_VERIFY_SSL=False` in your environment variables if you're getting SSL certificate errors.
+2. Run the integration tests to help troubleshoot:
+   ```bash
+   PLEX_VERIFY_SSL=False uv run pytest -m integration
+   ```
 
 ## Code Style and Conventions
 
@@ -160,4 +168,3 @@ If you are experiencing connection issues to your Plex server try running the in
 
 - **Asynchronous Patterns:**  
   Define I/O-bound functions as async and use `asyncio.to_thread()` to handle blocking operations.
-

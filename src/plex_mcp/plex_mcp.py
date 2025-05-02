@@ -13,6 +13,7 @@ from dataclasses import dataclass, asdict
 import os
 import asyncio
 import logging
+import requests
 
 from plexapi.server import PlexServer
 from plexapi.exceptions import NotFound, Unauthorized
@@ -88,10 +89,17 @@ class PlexClient:
     Encapsulate the Plex connection logic.
     This class handles initialization and caching of the PlexServer instance.
     """
-    def __init__(self, server_url: str = None, token: str = None):
+    def __init__(self, server_url: str = None, token: str = None, verify_ssl: bool = None):
         self.server_url = server_url or os.environ.get("PLEX_SERVER_URL", "").rstrip("/")
         self.token = token or os.environ.get("PLEX_TOKEN")
-        
+
+        # Get verify_ssl from parameter or environment variable, default to True for security
+        if verify_ssl is None:
+            verify_ssl_env = os.environ.get("PLEX_VERIFY_SSL", "True")
+            self.verify_ssl = verify_ssl_env.lower() != "false"
+        else:
+            self.verify_ssl = verify_ssl
+
         if not self.server_url or not self.token:
             raise ValueError("Missing required configuration: Ensure PLEX_SERVER_URL and PLEX_TOKEN are set.")
         
@@ -109,8 +117,11 @@ class PlexClient:
         """
         if self._server is None:
             try:
-                logger.info("Initializing PlexServer with URL: %s", self.server_url)
-                self._server = PlexServer(self.server_url, self.token)
+                logger.info("Initializing PlexServer with URL: %s (verify_ssl=%s)", self.server_url, self.verify_ssl)
+                # Create a session with the verify parameter set
+                session = requests.Session()
+                session.verify = self.verify_ssl
+                self._server = PlexServer(self.server_url, self.token, session=session)
                 logger.info("Successfully initialized PlexServer.")
 
                 # Validate the connection

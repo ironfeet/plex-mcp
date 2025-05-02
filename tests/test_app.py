@@ -19,6 +19,7 @@ from plex_mcp import (
     add_to_playlist,
     recent_movies,
     get_movie_genres,
+    PlexClient,
 )
 
 # --- Set Dummy Environment Variables ---
@@ -26,6 +27,7 @@ from plex_mcp import (
 def set_dummy_env(monkeypatch):
     monkeypatch.setenv("PLEX_SERVER_URL", "http://dummy")
     monkeypatch.setenv("PLEX_TOKEN", "dummy")
+    monkeypatch.setenv("PLEX_VERIFY_SSL", "True")
 
 # --- Dummy Classes to Simulate Plex Objects ---
 
@@ -158,6 +160,27 @@ def dummy_movie():
         roles=["Test Actor"],
         genres=["Thriller"]
     )
+
+# --- Tests for PlexClient ---
+
+def test_plex_client_verify_ssl_from_env(monkeypatch):
+    """Test that PlexClient correctly reads verify_ssl from environment variable."""
+    # Test with PLEX_VERIFY_SSL=True
+    monkeypatch.setenv("PLEX_VERIFY_SSL", "True")
+    client = PlexClient()
+    assert client.verify_ssl is True
+
+    # Test with PLEX_VERIFY_SSL=False
+    monkeypatch.setenv("PLEX_VERIFY_SSL", "False")
+    client = PlexClient()
+    assert client.verify_ssl is False
+
+    # Test with explicit parameter (overrides environment)
+    client = PlexClient(verify_ssl=True)
+    assert client.verify_ssl is True
+
+    client = PlexClient(verify_ssl=False)
+    assert client.verify_ssl is False
 
 # --- Tests for search_movies ---
 
